@@ -160,6 +160,73 @@ TEST_CASE("Zip")
     }
 }
 
+TEST_CASE("StrSplit")
+{
+    SECTION("Basic Split in Three")
+    {
+        int ct{0};
+        for (auto q : sst::cpputils::strsplit(std::string("a,a,a"), ','))
+        {
+            ct++;
+            REQUIRE(q == "a");
+        }
+        REQUIRE(ct == 3);
+
+        auto q = sst::cpputils::strsplit(std::string("a,a,a"), ',');
+        for (auto i = q.begin(); i != q.end(); ++i)
+        {
+            REQUIRE(*i == "a");
+        }
+
+        auto v = std::vector<std::string>{"a", "very", "fun", "tool"};
+        auto s = std::string("a;very;fun;tool");
+        auto z = sst::cpputils::strsplit(s, ';');
+        ct = 0;
+        for (auto i = z.begin(); i != z.end(); ++i)
+        {
+            REQUIRE(v[ct] == *i);
+            ++ct;
+        }
+
+        for (const auto &[i, q] : sst::cpputils::enumerate(z))
+        {
+            REQUIRE(v[i] == q);
+        }
+    }
+
+    SECTION("Failed Splits")
+    {
+        int ct = 0;
+        for (auto q : sst::cpputils::strsplit(std::string("This one doesnt split"), '!'))
+        {
+            REQUIRE(q == "This one doesnt split");
+            ct++;
+        }
+        REQUIRE(ct == 1);
+
+        ct = 0;
+        for (auto q : sst::cpputils::strsplit(std::string(""), '!'))
+        {
+            REQUIRE(q == "");
+            ct++;
+        }
+        REQUIRE(ct == 1);
+    }
+
+    SECTION("Split other things")
+    {
+        std::vector<int> data{0, 1, 17, 2, 3, 17, 4, 5};
+        int ct = 0;
+        for (const auto &[i, q] : sst::cpputils::enumerate(sst::cpputils::strsplit(data, 17)))
+        {
+            REQUIRE(q.size() == 2);
+            REQUIRE(q[0] == i * 2);
+            REQUIRE(q[1] == i * 2 + 1);
+            ct++;
+        }
+        REQUIRE(ct == 3);
+    }
+}
 int main(int argc, char **argv)
 {
     int result = Catch::Session().run(argc, argv);

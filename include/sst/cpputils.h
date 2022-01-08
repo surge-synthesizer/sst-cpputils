@@ -7,4 +7,4 @@
  */
 
 #include "sst/cpputils/iterators.h"
-
+#include "sst/cpputils/strings.h"
