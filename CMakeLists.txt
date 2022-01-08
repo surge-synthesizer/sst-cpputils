@@ -20,4 +20,11 @@ if(SST_CPPUTILS_BUILD_TESTS)
     target_link_libraries(sst-cpputils-tests PRIVATE ${PROJECT_NAME})
     target_sources(sst-cpputils-tests PRIVATE
             tests/tests.cpp)
+
+    add_custom_command(TARGET sst-cpputils-tests
+            POST_BUILD
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMAND ${CMAKE_COMMAND} -E echo "Copying $<TARGET_FILE:sst-cpputils-tests> to test-binary"
+            COMMAND ${CMAKE_COMMAND} -E make_directory test-binary
+            COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:sst-cpputils-tests>" test-binary)
 endif()
