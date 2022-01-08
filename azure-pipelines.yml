@@ -1,7 +1,4 @@
-# Build dexed with JUCE buidls
-
-trigger:
-- main
+# Azure Pipeline JUST for PR checks
 
 pr:
 - main
@@ -15,7 +12,7 @@ jobs:
         imageName: 'macos-10.15'
         isMac: True
       win:
-        imageName: 'windows-2019`
+        imageName: 'windows-2019'
         isWindows: True
       lin:
         imageName: 'ubuntu-20.04'
@@ -31,5 +28,5 @@ jobs:
   - bash: |
       cmake -Bbuild -DCMAKE_BUILD_TYPE=Release
       cmake --build build --config Release
-      ./build/sst-cpputils-tests
+      ./build/test-binary/sst-cpputils-tests
     displayName: Run tests with cmake
