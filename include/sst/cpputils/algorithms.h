@@ -15,20 +15,20 @@ namespace cpputils
 /**
  * Wrapper of std::find to check if a container contains a value
  */
-template <class InputIt, class T>
-constexpr bool contains(InputIt begin, InputIt end, const T &value)
+template <class ContainerType, class T>
+constexpr bool contains(const ContainerType& container, const T &value)
 {
-    return std::find(begin, end, value) != end;
+    return std::find(container.begin(), container.end(), value) != container.end();
 }
 
 /**
  * Wrapper of std::find_if to check if a container contains a value for which the predicate returns
  * true
  */
-template <class InputIt, class UnaryPredicate>
-constexpr bool contains_if(InputIt begin, InputIt end, UnaryPredicate q)
+template <class ContainerType, class UnaryPredicate>
+constexpr bool contains_if(const ContainerType& container, UnaryPredicate q)
 {
-    return std::find_if(begin, end, q) != end;
+    return std::find_if(container.begin(), container.end(), q) != container.end();
 }
 
 } // namespace cpputils

@@ -160,6 +160,56 @@ TEST_CASE("Zip")
     }
 }
 
+TEST_CASE("Contains")
+{
+    SECTION("Simple Vector")
+    {
+        std::vector<int> v{1, 3, 5, 7};
+
+        REQUIRE(sst::cpputils::contains(v, 3));
+        REQUIRE(! sst::cpputils::contains(v, 2));
+
+        auto isEven = [] (const auto& x) { return x % 2 == 0; };
+        auto isOdd = [] (const auto& x) { return x % 2 == 1; };
+        REQUIRE(sst::cpputils::contains_if(v, isOdd));
+        REQUIRE(! sst::cpputils::contains_if(v, isEven));
+    }
+
+    SECTION("Some other types")
+    {
+        std::string abcs = "abcdefg";
+        REQUIRE(sst::cpputils::contains(abcs, 'e'));
+        REQUIRE(! sst::cpputils::contains(abcs, 'y'));
+
+        std::array<char, 4> abcarr{'d', 'e', 'f', 'g'};
+        REQUIRE(sst::cpputils::contains(abcarr, 'e'));
+        REQUIRE(! sst::cpputils::contains(abcarr, 'y'));
+    }
+
+    SECTION("Empty Containers")
+    {
+        auto empty = [](const auto &v, auto dummyVal) {
+            REQUIRE(! sst::cpputils::contains(v, dummyVal));
+        };
+        empty(std::vector<int>(), 0);
+        empty(std::string(), char());
+        empty(std::array<int, 0>(), 0);
+    }
+
+    SECTION("Map Contains")
+    {
+        std::map<std::string, std::string> m;
+        m["hi"] = "there";
+        m["zoo"] = "keeper";
+
+        REQUIRE(sst::cpputils::contains_if(m, [] (const auto& pair) { return pair.first == "hi"; }));
+        REQUIRE(! sst::cpputils::contains_if(m, [] (const auto& pair) { return pair.first == "not_a_key"; }));
+
+        REQUIRE(sst::cpputils::contains_if(m, [] (const auto& pair) { return pair.second == "keeper"; }));
+        REQUIRE(! sst::cpputils::contains_if(m, [] (const auto& pair) { return pair.second == "not_a_value"; }));
+    }
+}
+
 int main(int argc, char **argv)
 {
     int result = Catch::Session().run(argc, argv);
