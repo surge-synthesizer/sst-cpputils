@@ -6,5 +6,5 @@
  * by choosing the files below if you prefer
  */
 
+#include "sst/cpputils/algorithms.h"
 #include "sst/cpputils/iterators.h"
-
