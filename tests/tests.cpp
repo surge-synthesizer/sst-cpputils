@@ -210,6 +210,56 @@ TEST_CASE("Contains")
     }
 }
 
+TEST_CASE("Erase")
+{
+    SECTION("Simple Vector")
+    {
+        std::vector<int> v{1, 3, 5};
+        sst::cpputils::nodal_erase_if(v, [] (int x) { return x > 2 && x < 4; });
+
+        REQUIRE(v[0] == 1);
+        REQUIRE(v[1] == 5);
+        REQUIRE(v.size() == 2);
+    }
+
+    SECTION("Some other types")
+    {
+        std::string abcs = "abcdefg";
+        sst::cpputils::nodal_erase_if(abcs, [] (char ch) { return ch > 'a' && ch < 'g'; });
+
+        REQUIRE(abcs[0] == 'a');
+        REQUIRE(abcs[1] == 'g');
+        REQUIRE(abcs.size() == 2);
+    }
+
+    SECTION("Map Erase")
+    {
+        // std::remove_if doesn't like types with user-defined move constructor, like this one:
+        struct TestStruct
+        {
+            std::string x;
+
+            TestStruct() = default;
+            TestStruct (const TestStruct&) = delete;
+            TestStruct& operator= (const TestStruct&) = delete;
+            TestStruct (TestStruct&&) noexcept = default;
+            TestStruct& operator= (TestStruct&&) noexcept = default;
+        };
+
+        std::map<int, TestStruct> m;
+        m[1] = TestStruct { "there" };
+        m[2] = TestStruct { "keeper" };
+
+        // we want to do this, but compiler will give errors.
+        // m.erase(std::remove_if(m.begin(), m.end(), [] (const auto& pair) { return pair.second.x == "keeper"; }), m.end());
+
+        sst::cpputils::nodal_erase_if(m, [] (const auto& pair) { return pair.second.x == "keeper"; });
+
+        REQUIRE(m[1].x == "there");
+        REQUIRE(m.size() == 1);
+    }
+}
+
 int main(int argc, char **argv)
 {
     int result = Catch::Session().run(argc, argv);
