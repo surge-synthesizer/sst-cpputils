@@ -65,6 +65,7 @@ jobs:
        git add docs
        git status
        git commit -m "Update sst-utils docs at ${HASH}"
+       git push origin main
        
     displayName: "Make Doxygen and Commit it" 
     
