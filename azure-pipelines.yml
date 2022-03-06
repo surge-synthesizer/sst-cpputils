@@ -54,6 +54,9 @@ jobs:
        HASH=`git rev-parse --short HEAD`
        TOK=`cat $AGENT_TEMPDIRECTORY/sru-token.txt`
        git clone https://surge-rackupdater:${TOK}@github.com/surge-synthesizer/sst-docs
+       git config --global user.email "surge-rackupdater@dev.null"
+       git config --global user.name "surge-rackupdater"
+
        mkdir -p sst-docs/docs/sst-cpputils
        pushd doxy-out 
        tar cf - . | (cd ../sst-docs/docs/sst-cpputils && tar xf -)
