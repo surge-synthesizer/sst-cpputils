@@ -167,29 +167,29 @@ TEST_CASE("Contains")
         std::vector<int> v{1, 3, 5, 7};
 
         REQUIRE(sst::cpputils::contains(v, 3));
-        REQUIRE(! sst::cpputils::contains(v, 2));
+        REQUIRE(!sst::cpputils::contains(v, 2));
 
-        auto isEven = [] (const auto& x) { return x % 2 == 0; };
-        auto isOdd = [] (const auto& x) { return x % 2 == 1; };
+        auto isEven = [](const auto &x) { return x % 2 == 0; };
+        auto isOdd = [](const auto &x) { return x % 2 == 1; };
         REQUIRE(sst::cpputils::contains_if(v, isOdd));
-        REQUIRE(! sst::cpputils::contains_if(v, isEven));
+        REQUIRE(!sst::cpputils::contains_if(v, isEven));
     }
 
     SECTION("Some other types")
     {
         std::string abcs = "abcdefg";
         REQUIRE(sst::cpputils::contains(abcs, 'e'));
-        REQUIRE(! sst::cpputils::contains(abcs, 'y'));
+        REQUIRE(!sst::cpputils::contains(abcs, 'y'));
 
         std::array<char, 4> abcarr{'d', 'e', 'f', 'g'};
         REQUIRE(sst::cpputils::contains(abcarr, 'e'));
-        REQUIRE(! sst::cpputils::contains(abcarr, 'y'));
+        REQUIRE(!sst::cpputils::contains(abcarr, 'y'));
     }
 
     SECTION("Empty Containers")
     {
         auto empty = [](const auto &v, auto dummyVal) {
-            REQUIRE(! sst::cpputils::contains(v, dummyVal));
+            REQUIRE(!sst::cpputils::contains(v, dummyVal));
         };
         empty(std::vector<int>(), 0);
         empty(std::string(), char());
@@ -202,11 +202,115 @@ TEST_CASE("Contains")
         m["hi"] = "there";
         m["zoo"] = "keeper";
 
-        REQUIRE(sst::cpputils::contains_if(m, [] (const auto& pair) { return pair.first == "hi"; }));
-        REQUIRE(! sst::cpputils::contains_if(m, [] (const auto& pair) { return pair.first == "not_a_key"; }));
+        REQUIRE(sst::cpputils::contains_if(m, [](const auto &pair) { return pair.first == "hi"; }));
+        REQUIRE(!sst::cpputils::contains_if(
+            m, [](const auto &pair) { return pair.first == "not_a_key"; }));
 
-        REQUIRE(sst::cpputils::contains_if(m, [] (const auto& pair) { return pair.second == "keeper"; }));
-        REQUIRE(! sst::cpputils::contains_if(m, [] (const auto& pair) { return pair.second == "not_a_value"; }));
+        REQUIRE(sst::cpputils::contains_if(
+            m, [](const auto &pair) { return pair.second == "keeper"; }));
+        REQUIRE(!sst::cpputils::contains_if(
+            m, [](const auto &pair) { return pair.second == "not_a_value"; }));
+    }
+}
+
+TEST_CASE("SimpleRingBuffer")
+{
+    SECTION("Pop of empty buffer has no value")
+    {
+        sst::cpputils::SimpleRingBuffer<float, 8> buf;
+        REQUIRE(!buf.pop().has_value());
+    }
+
+    SECTION("Push and pop work as expected")
+    {
+        // Basics.
+        sst::cpputils::SimpleRingBuffer<int, 4> buf;
+        buf.push(0);
+        buf.push(1);
+        REQUIRE(*buf.pop() == 0);
+        REQUIRE(*buf.pop() == 1);
+
+        // Get the write marker past the end.
+        buf.push(2);
+        buf.push(3);
+        buf.push(4);
+        REQUIRE(*buf.pop() == 2);
+        REQUIRE(*buf.pop() == 3);
+        REQUIRE(*buf.pop() == 4);
+
+        // Should be empty.
+        REQUIRE(!buf.pop().has_value());
+
+        // Write one past the full capacity. Should be marked as empty.
+        buf.push(5);
+        buf.push(6);
+        buf.push(7);
+        buf.push(8);
+        REQUIRE(!buf.pop().has_value());
+
+        // Now write another one, the read value should be skipped to the end and we're empty,
+        // skipping the entire previous batch of writes.
+        buf.push(9);
+        REQUIRE(*buf.pop() == 9);
+        REQUIRE(!buf.pop().has_value());
+    }
+
+    SECTION("Popall works as expected")
+    {
+        sst::cpputils::SimpleRingBuffer<int, 4> buf;
+        buf.push(0);
+        buf.push(1);
+        buf.push(2);
+        REQUIRE_THAT(buf.popall(), Catch::Matchers::Equals(std::vector<int>{0, 1, 2}));
+        REQUIRE(buf.popall().empty());
+        REQUIRE(!buf.pop().has_value());
+
+        // Let's go fully around the buffer and see what we get.
+        buf.push(3);
+        buf.push(4);
+        buf.push(5);
+        buf.push(6);
+        REQUIRE(buf.empty());
+        REQUIRE(buf.popall().empty());
+        buf.push(7);
+        buf.push(8);
+        REQUIRE_THAT(buf.popall(), Catch::Matchers::Equals(std::vector<int>{7, 8}));
+    }
+
+    SECTION("Pushall works as expected")
+    {
+        sst::cpputils::SimpleRingBuffer<int, 4> buf;
+        buf.push(0);
+        std::vector<int> v = {1, 2, 3, 4};
+        buf.push(v);
+        // Should have wrapped around once.
+        REQUIRE_THAT(buf.popall(), Catch::Matchers::Equals(std::vector<int>{4}));
+
+        buf.push(v);
+        // Should have come back around the ring. Read pointer wouldn't have moved, so we'd be
+        // considered empty.
+        REQUIRE(buf.empty());
+
+        // Smaller buffer works as expect.
+        buf.clear();
+        v = {1, 2, 3};
+        buf.push(v);
+        REQUIRE_THAT(buf.popall(), Catch::Matchers::Equals(v));
+
+        // Try a super long push.
+        buf.clear();
+        v = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+        buf.push(v);
+        // size = 11, so should go around twice before adding anything.
+        REQUIRE_THAT(buf.popall(), Catch::Matchers::Equals(std::vector<int>{8, 9, 10}));
+
+        // Should get the last 2 vals when 2 already in, and go around 3x.
+        buf.clear();
+        buf.push(0);
+        buf.push(1);
+        v = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+        buf.push(v);
+        REQUIRE_THAT(buf.popall(), Catch::Matchers::Equals(std::vector<int>{10, 11}));
     }
 }
 
