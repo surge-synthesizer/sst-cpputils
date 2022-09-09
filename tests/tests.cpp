@@ -312,6 +312,13 @@ TEST_CASE("SimpleRingBuffer")
         buf.push(v);
         REQUIRE_THAT(buf.popall(), Catch::Matchers::Equals(std::vector<int>{10, 11}));
     }
+
+    SECTION("Non-copyable")
+    {
+        sst::cpputils::SimpleRingBuffer<std::unique_ptr<int>, 4> buf;
+        auto z = std::make_unique<int>(5);
+        buf.push(std::move(z));
+    }
 }
 
 TEST_CASE("Erase")
@@ -319,7 +326,7 @@ TEST_CASE("Erase")
     SECTION("Simple Vector")
     {
         std::vector<int> v{1, 3, 5};
-        sst::cpputils::nodal_erase_if(v, [] (int x) { return x > 2 && x < 4; });
+        sst::cpputils::nodal_erase_if(v, [](int x) { return x > 2 && x < 4; });
 
         REQUIRE(v[0] == 1);
         REQUIRE(v[1] == 5);
@@ -329,7 +336,7 @@ TEST_CASE("Erase")
     SECTION("Some other types")
     {
         std::string abcs = "abcdefg";
-        sst::cpputils::nodal_erase_if(abcs, [] (char ch) { return ch > 'a' && ch < 'g'; });
+        sst::cpputils::nodal_erase_if(abcs, [](char ch) { return ch > 'a' && ch < 'g'; });
 
         REQUIRE(abcs[0] == 'a');
         REQUIRE(abcs[1] == 'g');
@@ -344,20 +351,22 @@ TEST_CASE("Erase")
             std::string x;
 
             TestStruct() = default;
-            TestStruct (const TestStruct&) = delete;
-            TestStruct& operator= (const TestStruct&) = delete;
-            TestStruct (TestStruct&&) noexcept = default;
-            TestStruct& operator= (TestStruct&&) noexcept = default;
+            TestStruct(const TestStruct &) = delete;
+            TestStruct &operator=(const TestStruct &) = delete;
+            TestStruct(TestStruct &&) noexcept = default;
+            TestStruct &operator=(TestStruct &&) noexcept = default;
         };
 
         std::map<int, TestStruct> m;
-        m[1] = TestStruct { "there" };
-        m[2] = TestStruct { "keeper" };
+        m[1] = TestStruct{"there"};
+        m[2] = TestStruct{"keeper"};
 
         // we want to do this, but compiler will give errors.
-        // m.erase(std::remove_if(m.begin(), m.end(), [] (const auto& pair) { return pair.second.x == "keeper"; }), m.end());
+        // m.erase(std::remove_if(m.begin(), m.end(), [] (const auto& pair) { return pair.second.x
+        // == "keeper"; }), m.end());
 
-        sst::cpputils::nodal_erase_if(m, [] (const auto& pair) { return pair.second.x == "keeper"; });
+        sst::cpputils::nodal_erase_if(m,
+                                      [](const auto &pair) { return pair.second.x == "keeper"; });
 
         REQUIRE(m[1].x == "there");
         REQUIRE(m.size() == 1);
