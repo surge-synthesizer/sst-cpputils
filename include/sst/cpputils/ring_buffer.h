@@ -127,9 +127,11 @@ class SimpleRingBuffer
     // be substantially faster than calling push() with a single element in a loop.
     //
     // Only works if T is a copy-able type.
-    typename std::enable_if<std::is_copy_constructible_v<T>, void>::type
+    template <typename U = T>
+    typename std::enable_if_t<std::is_copy_constructible_v<U>>
     push(const T *units, std::size_t sz)
     {
+        static_assert(std::is_same_v<U, T>);
         // Ensure there's no silliness.
         while (sz > N)
         {
@@ -151,8 +153,13 @@ class SimpleRingBuffer
     }
 
     // Convenience method for pushing vectors.
-    typename std::enable_if<std::is_copy_constructible_v<T>, void>::type
-    push(const std::vector<T> &v) { push(v.data(), v.size()); }
+    template <typename U = T>
+    typename std::enable_if_t<std::is_copy_constructible_v<U>>
+    push(const std::vector<T> &v)
+    {
+        static_assert(std::is_same_v<U, T>);
+        push(v.data(), v.size());
+    }
 
     // Utility functions for a reader subscribing to a buffer. A writer can check for these to avoid
     // writing to a buffer that nobody's listening from.
