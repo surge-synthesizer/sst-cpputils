@@ -321,6 +321,119 @@ TEST_CASE("SimpleRingBuffer")
     }
 }
 
+// Repeat of the RingBuffer tests with the StereoRingBuffer.
+TEST_CASE("StereoRingBuffer")
+{
+    SECTION("Pop of empty buffer has no value")
+    {
+        sst::cpputils::StereoRingBuffer<float, 8> buf;
+        REQUIRE(!buf.pop().has_value());
+    }
+
+    SECTION("Push and pop work as expected")
+    {
+        using P = std::pair<float, float>;
+
+        // Basics.
+        sst::cpputils::StereoRingBuffer<float, 4> buf;
+        buf.push(0, 1);
+        buf.push(2, 3);
+        REQUIRE(*buf.pop() == P{0, 1});
+        REQUIRE(*buf.pop() == P{2, 3});
+
+        // Get the write marker past the end.
+        buf.push(2, 2);
+        buf.push(3, 3);
+        buf.push(4, 4);
+        REQUIRE(*buf.pop() == P{2, 2});
+        REQUIRE(*buf.pop() == P{3, 3});
+        REQUIRE(*buf.pop() == P{4, 4});
+
+        // Should be empty.
+        REQUIRE(!buf.pop().has_value());
+
+        // Write one past the full capacity. Should be marked as empty.
+        buf.push(5, 5);
+        buf.push(6, 6);
+        buf.push(7, 7);
+        buf.push(8, 8);
+        REQUIRE(!buf.pop().has_value());
+
+        // Now write another one, the read value should be skipped to the end and we're empty,
+        // skipping the entire previous batch of writes.
+        buf.push(9, 9);
+        REQUIRE(*buf.pop() == P{9, 9});
+        REQUIRE(!buf.pop().has_value());
+    }
+
+    SECTION("Popall works as expected")
+    {
+        sst::cpputils::StereoRingBuffer<float, 4> buf;
+        buf.push(0, 1);
+        buf.push(2, 3);
+        buf.push(4, 5);
+        auto expected = std::make_pair(std::vector<float>{0, 2, 4}, std::vector<float>{1, 3, 5});
+        auto result = buf.popall();
+        REQUIRE_THAT(result.first, Catch::Matchers::Equals(expected.first));
+        REQUIRE_THAT(result.second, Catch::Matchers::Equals(expected.second));
+        REQUIRE(buf.popall().first.empty());
+        REQUIRE(!buf.pop().has_value());
+
+        // Let's go fully around the buffer and see what we get.
+        buf.push(3, 3);
+        buf.push(4, 4);
+        buf.push(5, 5);
+        buf.push(6, 6);
+        REQUIRE(buf.empty());
+        REQUIRE(buf.popall().first.empty());
+        buf.push(7, 7);
+        buf.push(8, 8);
+        result = buf.popall();
+        REQUIRE_THAT(result.first, Catch::Matchers::Equals(std::vector<float>{7, 8}));
+        REQUIRE_THAT(result.second, Catch::Matchers::Equals(std::vector<float>{7, 8}));
+    }
+
+    SECTION("Pushall works as expected")
+    {
+        sst::cpputils::StereoRingBuffer<float, 4> buf;
+        buf.push(0, 0);
+        std::vector<float> vL = {1, 2, 3, 4};
+        std::vector<float> vR = {5, 6, 7, 8};
+        buf.push(vL, vR);
+        // Should have wrapped around once.
+        REQUIRE_THAT(buf.popall().first, Catch::Matchers::Equals(std::vector<float>{4}));
+
+        buf.push(vL, vR);
+        // Should have come back around the ring. Read pointer wouldn't have moved, so we'd
+        // be considered empty.
+        REQUIRE(buf.empty());
+
+        // Smaller buffer works as expect.
+        buf.clear();
+        vL = {1, 2, 3};
+        vR = {4, 5, 6};
+        buf.push(vL, vR);
+        REQUIRE_THAT(buf.popall().second, Catch::Matchers::Equals(vR));
+
+        // Try a super long push.
+        buf.clear();
+        vL = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+        vR = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+        buf.push(vL, vR);
+        // size = 11, so should go around twice before adding anything.
+        REQUIRE_THAT(buf.popall().first, Catch::Matchers::Equals(std::vector<float>{8, 9, 10}));
+
+        // Should get the last 2 vals when 2 already in, and go around 3x.
+        buf.clear();
+        buf.push(0, 0);
+        buf.push(1, 1);
+        vL = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+        vR = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+        buf.push(vL, vR);
+        REQUIRE_THAT(buf.popall().first, Catch::Matchers::Equals(std::vector<float>{10, 11}));
+    }
+}
+
 TEST_CASE("Erase")
 {
     SECTION("Simple Vector")
@@ -345,7 +458,8 @@ TEST_CASE("Erase")
 
     SECTION("Map Erase")
     {
-        // std::remove_if doesn't like types with user-defined move constructor, like this one:
+        // std::remove_if doesn't like types with user-defined move constructor, like this
+        // one:
         struct TestStruct
         {
             std::string x;
@@ -362,7 +476,8 @@ TEST_CASE("Erase")
         m[2] = TestStruct{"keeper"};
 
         // we want to do this, but compiler will give errors.
-        // m.erase(std::remove_if(m.begin(), m.end(), [] (const auto& pair) { return pair.second.x
+        // m.erase(std::remove_if(m.begin(), m.end(), [] (const auto& pair) { return
+        // pair.second.x
         // == "keeper"; }), m.end());
 
         sst::cpputils::nodal_erase_if(m,
