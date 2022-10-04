@@ -150,10 +150,11 @@ class SimpleRingBuffer : public internal::RingBufferInternal<N, MemoryOrder>
         std::tie(sz1, sz2) = this->prepareToRead(sz);
         std::vector<T> v(sz);
         auto it = v.begin();
-        it = std::move(&buf_[this->readPos_], &buf_[this->readPos_ + sz1], it);
+        auto b = buf_.begin();
+        it = std::move(b + this->readPos_, b + this->readPos_ + sz1, it);
         if (sz2)
         {
-            std::move(&buf_[0], &buf_[sz2], it);
+            std::move(b, b + sz2, it);
         }
         this->readPos_ = this->mask(this->readPos_ + sz);
 
@@ -242,12 +243,14 @@ class StereoRingBuffer : public internal::RingBufferInternal<N, MemoryOrder>
         std::vector<T> vR(sz);
         auto itL = vL.begin();
         auto itR = vR.begin();
-        itL = std::move(&bufL_[this->readPos_], &bufL_[this->readPos_ + sz1], itL);
-        itR = std::move(&bufR_[this->readPos_], &bufR_[this->readPos_ + sz1], itR);
+        auto bL = bufL_.begin();
+        auto bR = bufR_.begin();
+        itL = std::move(bL + this->readPos_, bL + this->readPos_ + sz1, itL);
+        itR = std::move(bR + this->readPos_, bR + this->readPos_ + sz1, itR);
         if (sz2)
         {
-            std::move(&bufL_[0], &bufL_[sz2], itL);
-            std::move(&bufR_[0], &bufR_[sz2], itR);
+            std::move(bL, bL + sz2, itL);
+            std::move(bR, bR + sz2, itR);
         }
         this->readPos_ = this->mask(this->readPos_ + sz);
 
