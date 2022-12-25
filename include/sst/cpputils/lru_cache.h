@@ -46,6 +46,7 @@ template <typename Key, typename Value, bool lock_free = false> class LRU
 
     using ListElt = std::pair<Key, std::shared_ptr<Value>>;
     using ValueIter = typename std::list<ListElt>::iterator;
+    typedef std::conditional_t<lock_free, int, std::mutex> maybe_mutex;
 
     void evict();
     void to_front(ValueIter &iter);
@@ -55,7 +56,7 @@ template <typename Key, typename Value, bool lock_free = false> class LRU
     std::list<ListElt> l_;
     std::unordered_map<Key, ValueIter> m_;
     const std::size_t max_;
-    std::mutex lock_;
+    maybe_mutex lock_;
 };
 
 template <typename Key, typename Value, bool lock_free>
