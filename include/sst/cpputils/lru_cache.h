@@ -78,6 +78,7 @@ std::shared_ptr<Value> LRU<Key, Value, lock_free>::get(const Key &key)
         }
         l_.push_front(ListElt(key, v));
         m_.emplace(key, l_.begin());
+        unlock();
         return v;
     }
     to_front(it->second);
@@ -102,6 +103,7 @@ std::shared_ptr<Value> LRU<Key, Value, lock_free>::get(const Key &key, Construct
         }
         l_.push_front(ListElt(key, v));
         m_.emplace(key, l_.begin());
+        unlock();
         return v;
     }
     to_front(it->second);
