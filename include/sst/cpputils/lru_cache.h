@@ -1,7 +1,7 @@
 // Extremely simple LRU cache.
 //
 // Has a few advantages over the myriad of others out there.
-// (1) It's thread safe (through a global lock, but all operations are O(1) anyway).
+// (1) It's optionally thread safe (through a global lock, but all operations are O(1) anyway).
 // (2) Has an API that will construct an object if one isn't found in the cache, thus making lookup
 //     a very simple operation for the caller.
 
@@ -20,7 +20,7 @@ namespace cpputils
 {
 
 // Key must be copy-constructible. Value is unconstrained.
-template <typename Key, typename Value> class LRU
+template <typename Key, typename Value, bool lock_free = false> class LRU
 {
     static_assert(std::is_copy_constructible_v<Key>, "Key must be copy-constructible.");
 
@@ -49,6 +49,8 @@ template <typename Key, typename Value> class LRU
 
     void evict();
     void to_front(ValueIter &iter);
+    inline void lock();
+    inline void unlock();
 
     std::list<ListElt> l_;
     std::unordered_map<Key, ValueIter> m_;
@@ -56,12 +58,16 @@ template <typename Key, typename Value> class LRU
     std::mutex lock_;
 };
 
-template <typename Key, typename Value> LRU<Key, Value>::LRU(std::size_t maximum) : max_(maximum) {}
+template <typename Key, typename Value, bool lock_free>
+LRU<Key, Value, lock_free>::LRU(std::size_t maximum) : max_(maximum)
+{
+}
 
-template <typename Key, typename Value> std::shared_ptr<Value> LRU<Key, Value>::get(const Key &key)
+template <typename Key, typename Value, bool lock_free>
+std::shared_ptr<Value> LRU<Key, Value, lock_free>::get(const Key &key)
 {
     static_assert(can_key_construct, "Value must be constructible by only Key");
-    std::lock_guard z(lock_);
+    lock();
     auto it = m_.find(key);
     if (it == m_.end())
     {
@@ -75,15 +81,17 @@ template <typename Key, typename Value> std::shared_ptr<Value> LRU<Key, Value>::
         return v;
     }
     to_front(it->second);
-    return it->second->second;
+    auto v = it->second->second;
+    unlock();
+    return v;
 }
 
-template <typename Key, typename Value>
+template <typename Key, typename Value, bool lock_free>
 template <typename... ConstructionArgs>
-std::shared_ptr<Value> LRU<Key, Value>::get(const Key &key, ConstructionArgs &&...args)
+std::shared_ptr<Value> LRU<Key, Value, lock_free>::get(const Key &key, ConstructionArgs &&...args)
 {
     static_assert(std::is_constructible_v<Value, ConstructionArgs...>);
-    std::lock_guard z(lock_);
+    lock();
     auto it = m_.find(key);
     if (it == m_.end())
     {
@@ -97,19 +105,40 @@ std::shared_ptr<Value> LRU<Key, Value>::get(const Key &key, ConstructionArgs &&.
         return v;
     }
     to_front(it->second);
-    return it->second->second;
+    auto v = it->second->second;
+    unlock();
+    return v;
 }
 
-template <typename Key, typename Value> void LRU<Key, Value>::evict()
+template <typename Key, typename Value, bool lock_free> void LRU<Key, Value, lock_free>::evict()
 {
     auto elt = l_.back();
     m_.erase(elt.first);
     l_.pop_back();
 }
 
-template <typename Key, typename Value> void LRU<Key, Value>::to_front(ValueIter &iter)
+template <typename Key, typename Value, bool lock_free>
+void LRU<Key, Value, lock_free>::to_front(ValueIter &iter)
 {
     l_.splice(l_.begin(), l_, iter);
+}
+
+template <typename Key, typename Value, bool lock_free>
+inline void LRU<Key, Value, lock_free>::lock()
+{
+    if constexpr(!lock_free)
+    {
+        lock_.lock();
+    }
+}
+
+template <typename Key, typename Value, bool lock_free>
+inline void LRU<Key, Value, lock_free>::unlock()
+{
+    if constexpr(!lock_free)
+    {
+        lock_.unlock();
+    }
 }
 
 } // namespace cpputils
