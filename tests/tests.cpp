@@ -539,6 +539,62 @@ TEST_CASE("Bindings")
     }
 }
 
+TEST_CASE("LRU")
+{
+    SECTION("Key-constructed struct")
+    {
+        struct ts
+        {
+            explicit ts(const int &k) : key(k) {}
+            int key;
+        };
+
+        sst::cpputils::LRU<int, ts> cache(3);
+        auto s1 = cache.get(1);
+        auto s2 = cache.get(2);
+        auto s3 = cache.get(3);
+        REQUIRE(s1->key == 1);
+        REQUIRE(s2->key == 2);
+        REQUIRE(s3->key == 3);
+        // Move s1 up to head.
+        cache.get(1);
+        // Should be two use counts for s1, s2, and s3, as they all should be in the cache.
+        REQUIRE(s1.use_count() == 2);
+        REQUIRE(s2.use_count() == 2);
+        REQUIRE(s3.use_count() == 2);
+        // Now get a new one, s4. The least recently used should be s2, so it should get evicted and
+        // the shared_ptr's use_count should drop to 1. The others should remain two.
+        cache.get(4);
+        REQUIRE(s1.use_count() == 2);
+        REQUIRE(s2.use_count() == 1);
+        REQUIRE(s3.use_count() == 2);
+
+        // The following will fail to compile.
+        // cache.get(1, 1, 2);
+    }
+
+    SECTION("Multiple-constructed struct")
+    {
+        struct ts3
+        {
+            ts3(int a, float b, const int &c) : a_(a), b_(b), c_(c) {}
+            int a_;
+            float b_;
+            int c_;
+        };
+
+        sst::cpputils::LRU<int, ts3> cache(1);
+
+        // Just make sure the compilation works.
+        auto v = cache.get(1, 1, 2.f, 3);
+        REQUIRE(v->a_ == 1);
+        REQUIRE(v->c_ == 3);
+
+        // The following will fail to compile.
+        // cache.get(1);
+    }
+}
+
 int main(int argc, char **argv)
 {
     int result = Catch::Session().run(argc, argv);
