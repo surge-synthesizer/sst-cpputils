@@ -127,6 +127,7 @@ class SimpleRingBuffer : public internal::RingBufferInternal<N, MemoryOrder>
                   "SimpleRingBuffer requires types to be move-constructable.");
 
   public:
+    typedef T value_type;
     SimpleRingBuffer() {}
 
     // Pop off the latest item in the buffer.
