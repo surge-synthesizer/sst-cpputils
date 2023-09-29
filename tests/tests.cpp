@@ -595,6 +595,21 @@ TEST_CASE("LRU")
     }
 }
 
+TEST_CASE("Array CTor")
+{
+   struct NeedsArgs {
+     int a, b;
+     NeedsArgs(int aa, int bb) : a(aa), b(bb) {}
+     int val() { return a * 1000 + b; }
+   };
+   
+   std::array<NeedsArgs, 20> arr{sst::cpputils::make_array<NeedsArgs, 20>(17, 42)};
+   for (auto &a : arr)
+   {
+      REQUIRE(a.val() == 17042);
+   }
+}
+
 int main(int argc, char **argv)
 {
     int result = Catch::Session().run(argc, argv);
