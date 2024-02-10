@@ -32,6 +32,12 @@ std::array<T, sizeof...(Is)> make_array_helper_first_index(std::index_sequence<I
 {
     return {(static_cast<void>(Is), T{Is, std::forward<Args>(args)...})...};
 }
+
+template <typename T, size_t... Is, typename Maker>
+std::array<T, sizeof...(Is)> make_array_lambda(std::index_sequence<Is...>, Maker &&maker)
+{
+    return {T{maker(std::integral_constant<size_t, Is>())}...};
+}
 } // namespace detail
 
 /*
@@ -69,6 +75,14 @@ std::array<T, N> make_array_bind_first_index(Args &&...args)
     return detail::make_array_helper_first_index<T>(std::make_index_sequence<N>{},
                                                     std::forward<Args>(args)...);
 }
+
+/** Returns an array of size N, with each value initialized by calling the maker lambda with
+ * signature [] (size_t index) -> T. */
+template <typename T, size_t N, typename Maker>
+constexpr std::array<T, N> make_array_lambda(Maker &&maker)
+{
+    return detail::make_array_lambda<T>(std::make_index_sequence<N>{}, std::forward<Maker>(maker));
+}
 } // namespace sst::cpputils
 
-#endif // CONDUIT_CONSTRUCTORS_H
+#endif // SST_CPPUTILS_CONSTRUCTORS_H
