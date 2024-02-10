@@ -597,17 +597,47 @@ TEST_CASE("LRU")
 
 TEST_CASE("Array CTor")
 {
-   struct NeedsArgs {
-     int a, b;
-     NeedsArgs(int aa, int bb) : a(aa), b(bb) {}
-     int val() { return a * 1000 + b; }
-   };
-   
-   std::array<NeedsArgs, 20> arr{sst::cpputils::make_array<NeedsArgs, 20>(17, 42)};
-   for (auto &a : arr)
-   {
-      REQUIRE(a.val() == 17042);
-   }
+    struct NeedsArgs
+    {
+        int a, b;
+        NeedsArgs(int aa, int bb) : a(aa), b(bb) {}
+        int val() const { return a * 1000 + b; }
+    };
+
+    std::array<NeedsArgs, 20> arr{sst::cpputils::make_array<NeedsArgs, 20>(17, 42)};
+    for (const auto &a : arr)
+    {
+        REQUIRE(a.val() == 17042);
+    }
+}
+
+TEST_CASE("Array Indexed CTor")
+{
+    struct NeedsArgs
+    {
+        int a, b;
+        NeedsArgs(int aa, int bb) : a(aa), b(bb) {}
+        int val() const { return a * 1000 + b; }
+    };
+
+    SECTION("Last Index")
+    {
+        std::array<NeedsArgs, 20> arr{sst::cpputils::make_array_bind_last_index<NeedsArgs, 20>(17)};
+        for (const auto &[idx, a] : sst::cpputils::enumerate(arr))
+        {
+            REQUIRE(a.val() == 17000 + idx);
+        }
+    }
+
+    SECTION("First Index")
+    {
+        std::array<NeedsArgs, 20> arr{
+            sst::cpputils::make_array_bind_first_index<NeedsArgs, 20>(23)};
+        for (const auto &[idx, a] : sst::cpputils::enumerate(arr))
+        {
+            REQUIRE(a.val() == 1000 * idx + 23);
+        }
+    }
 }
 
 int main(int argc, char **argv)
