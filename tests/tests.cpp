@@ -640,6 +640,24 @@ TEST_CASE("Array Indexed CTor")
     }
 }
 
+TEST_CASE("Array Lambda CTor")
+{
+    struct NeedsArgs
+    {
+        int a, b;
+        NeedsArgs(int aa, int bb) : a(aa), b(bb) {}
+        int val() const { return a + b; }
+    };
+
+    std::array<NeedsArgs, 20> arr{sst::cpputils::make_array_lambda<NeedsArgs, 20>([](auto idx) {
+        return NeedsArgs{(int)idx, (int)idx * 2};
+    })};
+    for (const auto [idx, a] : sst::cpputils::enumerate(arr))
+    {
+        REQUIRE(a.val() == 3 * idx);
+    }
+}
+
 int main(int argc, char **argv)
 {
     int result = Catch::Session().run(argc, argv);
