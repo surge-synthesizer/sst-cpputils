@@ -1,19 +1,41 @@
 name: Build Tests
 
 on:
-  workflow_dispatch:
-  push:
+  pull_request:
     branches:
       - main
 
 jobs:
-  publish_doxygen:
-    name: Publish Doxygen
-    runs-on: ubuntu-latest
+  build_feature:
+    name: Test ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        include:
+          - os: ubuntu-latest
+            name: linux
+            testExe: build/sst-cpputils-test
+          - os: macos-latest
+            name: mac
+            testExe: build/sst-cpputils-test
+          - os: windows-latest
+            name: win
+            testExe: build/Release/sst-cpputils-test.exe
 
     steps:
-      - name: Publish Doxygen
-        uses: surge-synthesizer/sst-githubactions/publish-doxygen@main
+
+      - name: Checkout code
+        uses: actions/checkout@v2
         with:
-          destination: ${{ github.repository }}
-          token: ${{ secrets.SST_DOCS_ACCESS_TOKEN }}
+          submodules: recursive
+
+      - name: Build Smoke test
+        run: |
+          cmake -S . -B ./build -DCMAKE_BUILD_TYPE=Release -DSST_CPPUTILS_TESTS=TRUE -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+          cmake --build ./build --config Release
+
+      - name: Run Smoke Test
+        run: |
+          ls ${{ matrix.testExe }}
+          ${{ matrix.testExe }}
