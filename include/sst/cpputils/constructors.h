@@ -1,11 +1,21 @@
 /*
- * Constructors - ways to make elements, to date really a way
- * to make an array which contains elements without a default
- * constructor
+ * sst-cpputils - an open source library of things we needed in C++
+ * built by Surge Synth Team.
+ *
+ * Provides a collection of tools useful for writing C++-17 code
+ *
+ * Copyright 2022-2024, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * sst-cpputils is released under the MIT License found in the "LICENSE"
+ * file in the root of this repository
+ *
+ * All source in sst-cpputils available at
+ * https://github.com/surge-synthesizer/sst-cpputils
  */
 
-#ifndef SST_CPPUTILS_CONSTRUCTORS_H
-#define SST_CPPUTILS_CONSTRUCTORS_H
+#ifndef INCLUDE_SST_CPPUTILS_CONSTRUCTORS_H
+#define INCLUDE_SST_CPPUTILS_CONSTRUCTORS_H
 
 #include <array>
 

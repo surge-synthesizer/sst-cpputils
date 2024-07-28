@@ -1,0 +1,41 @@
+name: Build Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build_feature:
+    name: Test ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        include:
+          - os: ubuntu-latest
+            name: linux
+            testExe: build/sst-cpputils-tests
+          - os: macos-latest
+            name: mac
+            testExe: build/sst-cpputils-tests
+          - os: windows-latest
+            name: win
+            testExe: build/Release/sst-cpputils-tests.exe
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Build Smoke test
+        run: |
+          cmake -S . -B ./build -DCMAKE_BUILD_TYPE=Release -DSST_CPPUTILS_TESTS=TRUE -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+          cmake --build ./build --config Release
+
+      - name: Run Smoke Test
+        run: |
+          ls ${{ matrix.testExe }}
+          ${{ matrix.testExe }}

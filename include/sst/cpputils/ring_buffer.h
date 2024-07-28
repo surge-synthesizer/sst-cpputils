@@ -1,8 +1,21 @@
-/* -*- mode: c++; -*-
- * ring_buffer: Ring buffers of interest.
+/*
+ * sst-cpputils - an open source library of things we needed in C++
+ * built by Surge Synth Team.
+ *
+ * Provides a collection of tools useful for writing C++-17 code
+ *
+ * Copyright 2022-2024, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * sst-cpputils is released under the MIT License found in the "LICENSE"
+ * file in the root of this repository
+ *
+ * All source in sst-cpputils available at
+ * https://github.com/surge-synthesizer/sst-cpputils
  */
 
-#pragma once
+#ifndef INCLUDE_SST_CPPUTILS_RING_BUFFER_H
+#define INCLUDE_SST_CPPUTILS_RING_BUFFER_H
 
 #include <array>
 #include <atomic>
@@ -63,8 +76,8 @@ template <int N, std::memory_order MemoryOrder = std::memory_order_relaxed> clas
 
     // Get the counts of how many elements to write to the buffer, starting from the current write
     // pointer. We need the second count in case we go past the end of the buffer, in which case it
-    // will tell you how many to write from the beginning. Also returns current write position, so it
-    // is only loaded once.
+    // will tell you how many to write from the beginning. Also returns current write position, so
+    // it is only loaded once.
     std::tuple<std::size_t, std::size_t, std::size_t> prepareToWrite(std::size_t count) const
     {
         std::size_t pos = this->writePos_.load(MemoryOrder);
@@ -319,3 +332,5 @@ class StereoRingBuffer : public internal::RingBufferInternal<N, MemoryOrder>
 
 } // namespace cpputils
 } // namespace sst
+
+#endif // INCLUDE_SST_CPPUTILS_RING_BUFFER_H

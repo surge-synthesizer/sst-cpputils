@@ -1,9 +1,17 @@
 /*
- * sst-cpputils
- * Released under the MIT License
+ * sst-cpputils - an open source library of things we needed in C++
+ * built by Surge Synth Team.
  *
- * This header includes the entire suite of CPP utils. You can include individual ones
- * by choosing the files below if you prefer
+ * Provides a collection of tools useful for writing C++-17 code
+ *
+ * Copyright 2022-2024, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * sst-cpputils is released under the MIT License found in the "LICENSE"
+ * file in the root of this repository
+ *
+ * All source in sst-cpputils available at
+ * https://github.com/surge-synthesizer/sst-cpputils
  */
 
 #include "sst/cpputils/algorithms.h"

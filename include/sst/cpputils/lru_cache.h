@@ -1,11 +1,21 @@
-// Extremely simple LRU cache.
-//
-// Has a few advantages over the myriad of others out there.
-// (1) It's optionally thread safe (through a global lock, but all operations are O(1) anyway).
-// (2) Has an API that will construct an object if one isn't found in the cache, thus making lookup
-//     a very simple operation for the caller.
+/*
+ * sst-cpputils - an open source library of things we needed in C++
+ * built by Surge Synth Team.
+ *
+ * Provides a collection of tools useful for writing C++-17 code
+ *
+ * Copyright 2022-2024, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * sst-cpputils is released under the MIT License found in the "LICENSE"
+ * file in the root of this repository
+ *
+ * All source in sst-cpputils available at
+ * https://github.com/surge-synthesizer/sst-cpputils
+ */
 
-#pragma once
+#ifndef INCLUDE_SST_CPPUTILS_LRU_CACHE_H
+#define INCLUDE_SST_CPPUTILS_LRU_CACHE_H
 
 #include <list>
 #include <memory>
@@ -129,7 +139,7 @@ void LRU<Key, Value, lock_free>::to_front(ValueIter &iter)
 template <typename Key, typename Value, bool lock_free>
 inline void LRU<Key, Value, lock_free>::lock()
 {
-    if constexpr(!lock_free)
+    if constexpr (!lock_free)
     {
         lock_.lock();
     }
@@ -138,7 +148,7 @@ inline void LRU<Key, Value, lock_free>::lock()
 template <typename Key, typename Value, bool lock_free>
 inline void LRU<Key, Value, lock_free>::unlock()
 {
-    if constexpr(!lock_free)
+    if constexpr (!lock_free)
     {
         lock_.unlock();
     }
@@ -146,3 +156,5 @@ inline void LRU<Key, Value, lock_free>::unlock()
 
 } // namespace cpputils
 } // namespace sst
+
+#endif // INCLUDE_SST_CPPUTILS_LRU_CACHE_H
