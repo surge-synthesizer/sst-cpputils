@@ -129,7 +129,7 @@ void LRU<Key, Value, lock_free>::to_front(ValueIter &iter)
 template <typename Key, typename Value, bool lock_free>
 inline void LRU<Key, Value, lock_free>::lock()
 {
-    if constexpr(!lock_free)
+    if constexpr (!lock_free)
     {
         lock_.lock();
     }
@@ -138,7 +138,7 @@ inline void LRU<Key, Value, lock_free>::lock()
 template <typename Key, typename Value, bool lock_free>
 inline void LRU<Key, Value, lock_free>::unlock()
 {
-    if constexpr(!lock_free)
+    if constexpr (!lock_free)
     {
         lock_.unlock();
     }

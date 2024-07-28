@@ -73,10 +73,10 @@ template <typename Func, typename... BackParams> class BackBinder
 using std::bind_front;
 #else
 /** Temporary replacement for std::bind_front, which is only available in C++20 */
-template <typename Func, typename... Params>
-auto bind_front (Func&& func, Params&&... frontParams)
+template <typename Func, typename... Params> auto bind_front(Func &&func, Params &&...frontParams)
 {
-    return detail::FrontBinder<Func, Params...> { std::forward<Func> (func), std::forward<Params> (frontParams)... };
+    return detail::FrontBinder<Func, Params...>{std::forward<Func>(func),
+                                                std::forward<Params>(frontParams)...};
 }
 #endif
 
@@ -84,10 +84,10 @@ auto bind_front (Func&& func, Params&&... frontParams)
 using std::bind_back;
 #else
 /** Temporary replacement for std::bind_back, which is only available in C++23 */
-template <typename Func, typename... Params>
-auto bind_back (Func&& func, Params&&... backParams)
+template <typename Func, typename... Params> auto bind_back(Func &&func, Params &&...backParams)
 {
-    return detail::BackBinder<Func, Params...> { std::forward<Func> (func), std::forward<Params> (backParams)... };
+    return detail::BackBinder<Func, Params...>{std::forward<Func>(func),
+                                               std::forward<Params>(backParams)...};
 }
 #endif
 } // namespace cpputils

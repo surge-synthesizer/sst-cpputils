@@ -63,8 +63,8 @@ template <int N, std::memory_order MemoryOrder = std::memory_order_relaxed> clas
 
     // Get the counts of how many elements to write to the buffer, starting from the current write
     // pointer. We need the second count in case we go past the end of the buffer, in which case it
-    // will tell you how many to write from the beginning. Also returns current write position, so it
-    // is only loaded once.
+    // will tell you how many to write from the beginning. Also returns current write position, so
+    // it is only loaded once.
     std::tuple<std::size_t, std::size_t, std::size_t> prepareToWrite(std::size_t count) const
     {
         std::size_t pos = this->writePos_.load(MemoryOrder);
