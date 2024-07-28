@@ -1,8 +1,21 @@
-/* -*- mode: c++; -*-
- * ring_buffer: Ring buffers of interest.
+/*
+ * sst-cpputils - an open source library of things we needed in C++
+ * built by Surge Synth Team.
+ *
+ * Provides a collection of tools useful for writing C++-17 code
+ *
+ * Copyright 2022-2024, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * sst-cpputils is released under the MIT License found in the "LICENSE"
+ * file in the root of this repository
+ *
+ * All source in sst-cpputils available at
+ * https://github.com/surge-synthesizer/sst-cpputils
  */
 
-#pragma once
+#ifndef INCLUDE_SST_CPPUTILS_RING_BUFFER_H
+#define INCLUDE_SST_CPPUTILS_RING_BUFFER_H
 
 #include <array>
 #include <atomic>
@@ -319,3 +332,5 @@ class StereoRingBuffer : public internal::RingBufferInternal<N, MemoryOrder>
 
 } // namespace cpputils
 } // namespace sst
+
+#endif // INCLUDE_SST_CPPUTILS_RING_BUFFER_H
