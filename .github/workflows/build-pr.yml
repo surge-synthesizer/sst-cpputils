@@ -15,13 +15,13 @@ jobs:
         include:
           - os: ubuntu-latest
             name: linux
-            testExe: build/sst-cpputils-test
+            testExe: build/sst-cpputils-tests
           - os: macos-latest
             name: mac
-            testExe: build/sst-cpputils-test
+            testExe: build/sst-cpputils-tests
           - os: windows-latest
             name: win
-            testExe: build/Release/sst-cpputils-test.exe
+            testExe: build/Release/sst-cpputils-tests.exe
 
     steps:
 
