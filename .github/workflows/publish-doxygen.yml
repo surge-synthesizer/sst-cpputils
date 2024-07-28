@@ -1,0 +1,40 @@
+name: Publish Doxygen
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_feature:
+    name: Test ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: linux
+            testExe: build/sst-cpputils-test
+          - os: macos-latest
+            name: mac
+            testExe: build/sst-cpputils-test
+          - os: windows-latest
+            name: win
+            testExe: build/Release/sst-cpputils-test.exe
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Build test
+        run: |
+          cmake -S . -B ./build -DCMAKE_BUILD_TYPE=Release -DSST_CPPUTILS_BUILD_TESTS 
+          cmake --build ./build --config Release
+
+      - name: Run test
+        run: |
+          ls ${{ matrix.testExe }}
+          ${{ matrix.testExe }}
