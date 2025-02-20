@@ -880,6 +880,29 @@ TEST_CASE("ActiveSet")
         REQUIRE(len(as) == 0);
         REQUIRE(len(as) == as.activeCount);
     }
+
+    SECTION("Add and Remove Same Item")
+    {
+        sst::cpputils::active_set_overlay<TestThing> as;
+        REQUIRE(len(as) == 0);
+        REQUIRE(len(as) == as.activeCount);
+        as.addToActive(things[17]);
+        REQUIRE(len(as) == 1);
+        REQUIRE(len(as) == as.activeCount);
+
+        as.addToActive(things[4]);
+        REQUIRE(len(as) == 2);
+        REQUIRE(len(as) == as.activeCount);
+        as.removeFromActive(things[4]);
+
+        REQUIRE(len(as) == 1);
+        REQUIRE(len(as) == as.activeCount);
+
+        as.addToActive(things[4]);
+        REQUIRE(len(as) == 2);
+        REQUIRE(len(as) == as.activeCount);
+        as.removeFromActive(things[4]);
+    }
 }
 
 int main(int argc, char **argv)
