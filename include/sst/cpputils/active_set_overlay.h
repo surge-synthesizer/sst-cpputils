@@ -141,6 +141,13 @@ template <typename T> struct active_set_overlay
     iterator begin() const { return iterator(activeHead); }
     iterator end() const { return iterator(nullptr); }
 
+    iterator erase(const iterator &el)
+    {
+        auto nx = el->activeSetNext;
+        removeFromActive(*el);
+        return iterator(nx);
+    }
+
     T *activeHead{nullptr};
     size_t activeCount{0}; // mostly for debugging
 };
