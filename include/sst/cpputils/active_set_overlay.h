@@ -38,6 +38,12 @@ namespace sst::cpputils
  */
 template <typename T> struct active_set_overlay
 {
+    struct participant
+    {
+        T *activeSetNext{nullptr};
+        T *activeSetPrev{nullptr};
+    };
+
     void addToActive(T &s) { addToActive(&s); }
     void addToActive(T *s)
     {
@@ -56,6 +62,7 @@ template <typename T> struct active_set_overlay
                     activeHead->activeSetPrev = s;
                 }
                 activeHead = s;
+                ++activeCount;
             }
         }
     }
@@ -63,6 +70,9 @@ template <typename T> struct active_set_overlay
     void removeFromActive(T &s) { removeFromActive(&s); }
     void removeFromActive(T *s)
     {
+        assert(s->activeSetNext || s->activeSetPrev || s == activeHead);
+        --activeCount;
+
         if (s == activeHead)
             activeHead = s->activeSetNext;
 
@@ -117,6 +127,7 @@ template <typename T> struct active_set_overlay
     iterator end() const { return iterator(nullptr); }
 
     T *activeHead{nullptr};
+    size_t activeCount{0}; // mostly for debugging
 };
 
 } // namespace sst::cpputils
