@@ -67,10 +67,13 @@ template <typename T> struct active_set_overlay
         }
     }
 
-    void removeFromActive(T &s) { removeFromActive(&s); }
-    void removeFromActive(T *s)
+    bool removeFromActive(T &s) { return removeFromActive(&s); }
+    bool removeFromActive(T *s)
     {
-        assert(s->activeSetNext || s->activeSetPrev || s == activeHead);
+        if (!(s->activeSetNext || s->activeSetPrev || s == activeHead))
+        {
+            return false;
+        }
         --activeCount;
 
         if (s == activeHead)
@@ -84,6 +87,7 @@ template <typename T> struct active_set_overlay
         {
             s->activeSetNext->activeSetPrev = s->activeSetPrev;
         }
+        return true;
     }
 
     struct iterator

@@ -30,6 +30,12 @@ namespace sst::cpputils
  *
  * Note this allocator is *not* thread safe. do not use it
  * for STL classes which are shared across multiple threads.
+ *
+ * As of this writing you should *not* use this class. It works
+ * but the allocation method is painfully naive. It exists as
+ * an interface outline for how you would allocate in STL onto
+ * pre-allocated blocks and nothing more (and it works, but has
+ * a linear-time-in-N allocate cost).
  */
 template <typename T, int N> struct fixed_memory_allocator_impl
 {

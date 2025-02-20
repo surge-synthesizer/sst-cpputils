@@ -751,9 +751,8 @@ TEST_CASE("Fixed Allocator")
 
 TEST_CASE("ActiveSet")
 {
-    struct TestThing
+    struct TestThing : sst::cpputils::active_set_overlay<TestThing>::participant
     {
-        TestThing *activeSetNext{nullptr}, *activeSetPrev{nullptr};
         int value;
     };
 
@@ -772,11 +771,14 @@ TEST_CASE("ActiveSet")
         sst::cpputils::active_set_overlay<TestThing> as;
 
         REQUIRE(len(as) == 0);
+        REQUIRE(len(as) == as.activeCount);
         as.addToActive(things[0]);
         REQUIRE(len(as) == 1);
+        REQUIRE(len(as) == as.activeCount);
 
         as.addToActive(things[7]);
         REQUIRE(len(as) == 2);
+        REQUIRE(len(as) == as.activeCount);
 
         std::unordered_set<int> vals;
         for (auto &x : as)
@@ -792,14 +794,17 @@ TEST_CASE("ActiveSet")
 
         as.addToActive(things[17]);
         REQUIRE(len(as) == 1);
+        REQUIRE(len(as) == as.activeCount);
 
         as.addToActive(things[17]);
         REQUIRE(len(as) == 1);
+        REQUIRE(len(as) == as.activeCount);
         REQUIRE(as.begin()->value == 17);
         REQUIRE(&*as.begin() == &things[17]);
 
         as.removeFromActive(things[17]);
         REQUIRE(len(as) == 0);
+        REQUIRE(len(as) == as.activeCount);
     }
 
     SECTION("Remove Front works")
@@ -808,19 +813,24 @@ TEST_CASE("ActiveSet")
 
         as.addToActive(things[17]);
         REQUIRE(len(as) == 1);
+        REQUIRE(len(as) == as.activeCount);
 
         as.addToActive(things[17]);
         REQUIRE(len(as) == 1);
+        REQUIRE(len(as) == as.activeCount);
         REQUIRE(as.begin()->value == 17);
         REQUIRE(&*as.begin() == &things[17]);
 
         as.addToActive(things[22]);
         REQUIRE(len(as) == 2);
+        REQUIRE(len(as) == as.activeCount);
         as.removeFromActive(*as.begin());
         REQUIRE(len(as) == 1);
+        REQUIRE(len(as) == as.activeCount);
 
         as.removeFromActive(things[17]);
         REQUIRE(len(as) == 0);
+        REQUIRE(len(as) == as.activeCount);
     }
 
     SECTION("Drain Front First")
@@ -831,11 +841,44 @@ TEST_CASE("ActiveSet")
             as.addToActive(things[rand() & things.size()]);
         }
         REQUIRE(len(as) <= 40);
+
+        REQUIRE(as.activeCount <= 40);
         while (as.begin() != as.end())
         {
             as.removeFromActive(*as.begin());
         }
         REQUIRE(len(as) == 0);
+        REQUIRE(len(as) == as.activeCount);
+    }
+
+    SECTION("Insert, then Insert another")
+    {
+        sst::cpputils::active_set_overlay<TestThing> as;
+        as.addToActive(things[17]);
+        REQUIRE(len(as) == 1);
+        REQUIRE(len(as) == as.activeCount);
+        REQUIRE(as.begin()->value == 17);
+        as.removeFromActive(things[17]);
+        REQUIRE(len(as) == 0);
+        REQUIRE(len(as) == as.activeCount);
+
+        as.addToActive(things[21]);
+        REQUIRE(len(as) == 1);
+        REQUIRE(len(as) == as.activeCount);
+        REQUIRE(as.begin()->value == 21);
+        REQUIRE(as.removeFromActive(things[21]));
+        REQUIRE(len(as) == as.activeCount);
+        REQUIRE(len(as) == 0);
+    }
+
+    SECTION("Remove without add")
+    {
+        sst::cpputils::active_set_overlay<TestThing> as;
+        REQUIRE(len(as) == 0);
+        REQUIRE(len(as) == as.activeCount);
+        REQUIRE(!as.removeFromActive(things[17]));
+        REQUIRE(len(as) == 0);
+        REQUIRE(len(as) == as.activeCount);
     }
 }
 
