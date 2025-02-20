@@ -93,6 +93,14 @@ template <typename T> struct active_set_overlay
         return true;
     }
 
+    void removeAll()
+    {
+        while (begin() != end())
+        {
+            removeFromActive(*begin());
+        }
+    }
+
     struct iterator
     {
         using iterator_category = std::forward_iterator_tag;
