@@ -87,6 +87,9 @@ template <typename T> struct active_set_overlay
         {
             s->activeSetNext->activeSetPrev = s->activeSetPrev;
         }
+
+        s->activeSetNext = nullptr;
+        s->activeSetPrev = nullptr;
         return true;
     }
 
