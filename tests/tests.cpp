@@ -21,6 +21,8 @@
 #include <algorithm>
 #include <array>
 #include <map>
+#include <unordered_map>
+#include <unordered_set>
 #include <string>
 
 TEST_CASE("Enumerate")
@@ -480,9 +482,13 @@ TEST_CASE("Erase")
             std::string x;
 
             TestStruct() = default;
+
             TestStruct(const TestStruct &) = delete;
+
             TestStruct &operator=(const TestStruct &) = delete;
+
             TestStruct(TestStruct &&) noexcept = default;
+
             TestStruct &operator=(TestStruct &&) noexcept = default;
         };
 
@@ -505,7 +511,6 @@ TEST_CASE("Erase")
 
 TEST_CASE("Bindings")
 {
-
     struct Point
     {
         int x = 0, y = 0;
@@ -561,6 +566,7 @@ TEST_CASE("LRU")
         struct ts
         {
             explicit ts(const int &k) : key(k) {}
+
             int key;
         };
 
@@ -593,6 +599,7 @@ TEST_CASE("LRU")
         struct ts3
         {
             ts3(int a, float b, const int &c) : a_(a), b_(b), c_(c) {}
+
             int a_;
             float b_;
             int c_;
@@ -615,7 +622,9 @@ TEST_CASE("Array CTor")
     struct NeedsArgs
     {
         int a, b;
+
         NeedsArgs(int aa, int bb) : a(aa), b(bb) {}
+
         int val() const { return a * 1000 + b; }
     };
 
@@ -631,7 +640,9 @@ TEST_CASE("Array Indexed CTor")
     struct NeedsArgs
     {
         int a, b;
+
         NeedsArgs(int aa, int bb) : a(aa), b(bb) {}
+
         int val() const { return a * 1000 + b; }
     };
 
@@ -660,7 +671,9 @@ TEST_CASE("Array Lambda CTor")
     struct NeedsArgs
     {
         int a, b;
+
         NeedsArgs(int aa, int bb) : a(aa), b(bb) {}
+
         int val() const { return a + b; }
     };
 
@@ -670,6 +683,159 @@ TEST_CASE("Array Lambda CTor")
     for (const auto [idx, a] : sst::cpputils::enumerate(arr))
     {
         REQUIRE(a.val() == 3 * idx);
+    }
+}
+
+TEST_CASE("Fixed Allocator")
+{
+    SECTION("Vector")
+    {
+        using alloc_t = sst::cpputils::fixed_memory_allocator<int, 128>;
+        using vec_t = std::vector<int, alloc_t>;
+
+        alloc_t alloc(true);
+
+        vec_t v(alloc);
+        auto q = v;
+
+        v.push_back(1);
+        q.push_back(2);
+
+        v.push_back(4);
+        v.push_back(5);
+        REQUIRE(v.size() == 3);
+        REQUIRE(q.size() == 1);
+        REQUIRE(v[0] == 1);
+        REQUIRE(v[1] == 4);
+        REQUIRE(q[0] == 2);
+    }
+
+    SECTION("List")
+    {
+        using alloc_t = sst::cpputils::fixed_memory_allocator<int, 4096>;
+        using list_t = std::list<int, alloc_t>;
+
+        alloc_t alloc(true);
+        list_t v(alloc);
+        for (int i = 0; i < 3; i++)
+            v.push_back(i);
+
+        v.erase(v.begin());
+
+        v.push_back(10);
+
+        auto it = v.begin();
+        it++;
+        v.erase(it);
+        v.push_back(33);
+
+        REQUIRE(v.size() == 3);
+    }
+
+    SECTION("Unordered Map")
+    {
+        using alloc_t = sst::cpputils::fixed_memory_allocator<std::pair<const int, int>, 4096>;
+        using umap_t = std::unordered_map<int, int, std::hash<int>, std::equal_to<int>, alloc_t>;
+
+        alloc_t alloc(true);
+        umap_t m(0, alloc);
+
+        for (int i = 0; i < 3; i++)
+            m.insert({i, i * 2});
+
+        REQUIRE(m.size() == 3);
+        for (int i = 0; i < 3; ++i)
+            REQUIRE(m.at(i) == i * 2);
+    }
+}
+
+TEST_CASE("ActiveSet")
+{
+    struct TestThing
+    {
+        TestThing *activeSetNext{nullptr}, *activeSetPrev{nullptr};
+        int value;
+    };
+
+    std::array<TestThing, 64> things;
+    for (int i = 0; i < 64; ++i)
+        things[i].value = i;
+
+    auto len = [](const auto &as) {
+        int idx = 0;
+        for (const auto &x : as)
+            idx++;
+        return idx;
+    };
+    SECTION("Two Inserts")
+    {
+        sst::cpputils::active_set_overlay<TestThing> as;
+
+        REQUIRE(len(as) == 0);
+        as.addToActive(things[0]);
+        REQUIRE(len(as) == 1);
+
+        as.addToActive(things[7]);
+        REQUIRE(len(as) == 2);
+
+        std::unordered_set<int> vals;
+        for (auto &x : as)
+            vals.insert(x.value);
+        REQUIRE(vals.size() == 2);
+        REQUIRE(vals.find(0) != vals.end());
+        REQUIRE(vals.find(7) != vals.end());
+    }
+
+    SECTION("Insert Same Twice")
+    {
+        sst::cpputils::active_set_overlay<TestThing> as;
+
+        as.addToActive(things[17]);
+        REQUIRE(len(as) == 1);
+
+        as.addToActive(things[17]);
+        REQUIRE(len(as) == 1);
+        REQUIRE(as.begin()->value == 17);
+        REQUIRE(&*as.begin() == &things[17]);
+
+        as.removeFromActive(things[17]);
+        REQUIRE(len(as) == 0);
+    }
+
+    SECTION("Remove Front works")
+    {
+        sst::cpputils::active_set_overlay<TestThing> as;
+
+        as.addToActive(things[17]);
+        REQUIRE(len(as) == 1);
+
+        as.addToActive(things[17]);
+        REQUIRE(len(as) == 1);
+        REQUIRE(as.begin()->value == 17);
+        REQUIRE(&*as.begin() == &things[17]);
+
+        as.addToActive(things[22]);
+        REQUIRE(len(as) == 2);
+        as.removeFromActive(*as.begin());
+        REQUIRE(len(as) == 1);
+
+        as.removeFromActive(things[17]);
+        REQUIRE(len(as) == 0);
+    }
+
+    SECTION("Drain Front First")
+    {
+        sst::cpputils::active_set_overlay<TestThing> as;
+        for (int i = 0; i < 40; ++i)
+        {
+            as.addToActive(things[rand() & things.size()]);
+        }
+        REQUIRE(len(as) <= 40);
+        while (as.begin() != as.end())
+        {
+            as.removeFromActive(*as.begin());
+        }
+        REQUIRE(len(as) == 0);
     }
 }
 
