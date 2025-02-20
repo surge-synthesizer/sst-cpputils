@@ -920,6 +920,36 @@ TEST_CASE("ActiveSet")
         REQUIRE(len(as) == 0);
         REQUIRE(len(as) == as.activeCount);
     }
+
+    SECTION("Remove while iterating")
+    {
+        sst::cpputils::active_set_overlay<TestThing> as;
+        REQUIRE(len(as) == 0);
+        REQUIRE(len(as) == as.activeCount);
+
+        for (int i = 0; i < 16; ++i)
+        {
+            as.addToActive(things[i]);
+            REQUIRE(len(as) == i + 1);
+            REQUIRE(len(as) == as.activeCount);
+        }
+
+        auto sz = len(as);
+        auto rm = 0;
+        for (auto it = as.begin(); it != as.end();)
+        {
+            if (it->value % 2 == 0)
+            {
+                it = as.erase(it);
+                rm++;
+            }
+            else
+            {
+                it++;
+            }
+        }
+        REQUIRE(len(as) == sz - rm);
+    }
 }
 
 int main(int argc, char **argv)
