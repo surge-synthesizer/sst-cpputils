@@ -19,6 +19,7 @@
 
 #include <cstdint>
 #include <iostream>
+#include <cstring>
 
 namespace sst::cpputils
 {
