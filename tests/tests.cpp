@@ -482,6 +482,7 @@ TEST_CASE("Erase")
             std::string x;
 
             TestStruct() = default;
+            TestStruct(const std::string &x_) : x(x_) {}
 
             TestStruct(const TestStruct &) = delete;
 
