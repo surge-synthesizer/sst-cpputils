@@ -62,5 +62,5 @@ jobs:
 
       - name: Run Test
         run: |
-          ls -l build/tests
-          ./build/tests/sst-cpputils-tests
+          ls -l build
+          ./build/sst-cpputils-tests
