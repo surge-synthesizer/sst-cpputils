@@ -104,10 +104,7 @@ template <typename T, int N> struct fixed_memory_allocator_impl
         data_ = other.data_;
         used_ = other.used_;
         refCount_ = other.refCount_;
-        other.dataOwner_ = false;
-        other.data_ = nullptr;
-        other.used_ = nullptr;
-        other.refCount_ = nullptr;
+        *refCount_ += 1;
         return *this;
     }
 
