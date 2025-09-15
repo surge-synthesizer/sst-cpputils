@@ -8,7 +8,7 @@ add_library(${PROJECT_NAME} INTERFACE)
 target_include_directories(${PROJECT_NAME} INTERFACE include)
 
 if (MSVC)
-    message(FATAL_ERROR "${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}")
+    message(STATUS "Comppiler Variant is ${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}")
     target_compile_options(${PROJECT_NAME} INTERFACE
             /utf-8 /bigobj /permissive-
             /Zc:__cplusplus,enumTypes,templateScope,throwingNew,preprocessor)
