@@ -355,16 +355,16 @@ TEST_CASE("StereoRingBuffer")
         sst::cpputils::StereoRingBuffer<float, 4> buf;
         buf.push(0, 1);
         buf.push(2, 3);
-        REQUIRE(*buf.pop() == P{0, 1});
-        REQUIRE(*buf.pop() == P{2, 3});
+        REQUIRE(*buf.pop() == P{0.f, 1.f});
+        REQUIRE(*buf.pop() == P{2.f, 3.f});
 
         // Get the write marker past the end.
         buf.push(2, 2);
         buf.push(3, 3);
         buf.push(4, 4);
-        REQUIRE(*buf.pop() == P{2, 2});
-        REQUIRE(*buf.pop() == P{3, 3});
-        REQUIRE(*buf.pop() == P{4, 4});
+        REQUIRE(*buf.pop() == P{2.f, 2.f});
+        REQUIRE(*buf.pop() == P{3.f, 3.f});
+        REQUIRE(*buf.pop() == P{4.f, 4.f});
 
         // Should be empty.
         REQUIRE(!buf.pop().has_value());
@@ -379,7 +379,7 @@ TEST_CASE("StereoRingBuffer")
         // Now write another one, the read value should be skipped to the end and we're empty,
         // skipping the entire previous batch of writes.
         buf.push(9, 9);
-        REQUIRE(*buf.pop() == P{9, 9});
+        REQUIRE(*buf.pop() == P{9.f, 9.f});
         REQUIRE(!buf.pop().has_value());
     }
 
@@ -678,9 +678,8 @@ TEST_CASE("Array Lambda CTor")
         int val() const { return a + b; }
     };
 
-    std::array<NeedsArgs, 20> arr{sst::cpputils::make_array_lambda<NeedsArgs, 20>([](auto idx) {
-        return NeedsArgs{(int)idx, (int)idx * 2};
-    })};
+    std::array<NeedsArgs, 20> arr{sst::cpputils::make_array_lambda<NeedsArgs, 20>(
+        [](auto idx) { return NeedsArgs{(int)idx, (int)idx * 2}; })};
     for (const auto [idx, a] : sst::cpputils::enumerate(arr))
     {
         REQUIRE(a.val() == 3 * idx);
