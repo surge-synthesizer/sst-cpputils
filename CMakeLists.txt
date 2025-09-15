@@ -10,7 +10,7 @@ target_include_directories(${PROJECT_NAME} INTERFACE include)
 if (MSVC)
     target_compile_options(${PROJECT_NAME} INTERFACE
             /utf-8 /bigobj /permissive-)
-    if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
+    if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
         message(STATUS "Skipping __cplusplus etc for clang-cl")
     else ()
         message(STATUS "Including __cplusplus etc for MSVC-not-clang")
