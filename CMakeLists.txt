@@ -8,10 +8,15 @@ add_library(${PROJECT_NAME} INTERFACE)
 target_include_directories(${PROJECT_NAME} INTERFACE include)
 
 if (MSVC)
-    message(STATUS "Comppiler Variant is ${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}")
     target_compile_options(${PROJECT_NAME} INTERFACE
-            /utf-8 /bigobj /permissive-
-            /Zc:__cplusplus,enumTypes,templateScope,throwingNew,preprocessor)
+            /utf-8 /bigobj /permissive-)
+    if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
+        message(STATUS "Skipping __cplusplus etc for clang-cl")
+    else ()
+        message(STATUS "Including __cplusplus etc for MSVC-not-clang")
+        target_compile_options(${PROJECT_NAME} INTERFACE
+                /Zc:__cplusplus,enumTypes,templateScope,throwingNew,preprocesso)
+    endif ()
 endif ()
 
 option(SST_CPPUTILS_BUILD_TESTS "Add targets for building and running sst-cpputils tests" ${PROJECT_IS_TOP_LEVEL})

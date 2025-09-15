@@ -62,7 +62,7 @@ TEST_CASE("Enumerate")
     {
         auto empty = [](const auto &v) {
             bool never{true};
-            for (const auto [i, j] : sst::cpputils::enumerate(v))
+            for (const auto _ : sst::cpputils::enumerate(v))
             {
                 never = false;
             }
