@@ -166,11 +166,11 @@ TEST_CASE("Zip")
     SECTION("ZIP with Empty")
     {
         std::vector<int> test{0, 1, 2}, empty;
-        for (const auto &[a, b] : sst::cpputils::zip(test, empty))
+        for (const auto &_ : sst::cpputils::zip(test, empty))
         {
             REQUIRE(false);
         }
-        for (const auto &[a, b] : sst::cpputils::zip(empty, test))
+        for (const auto &_ : sst::cpputils::zip(empty, test))
         {
             REQUIRE(false);
         }
@@ -678,9 +678,8 @@ TEST_CASE("Array Lambda CTor")
         int val() const { return a + b; }
     };
 
-    std::array<NeedsArgs, 20> arr{sst::cpputils::make_array_lambda<NeedsArgs, 20>([](auto idx) {
-        return NeedsArgs{(int)idx, (int)idx * 2};
-    })};
+    std::array<NeedsArgs, 20> arr{sst::cpputils::make_array_lambda<NeedsArgs, 20>(
+        [](auto idx) { return NeedsArgs{(int)idx, (int)idx * 2}; })};
     for (const auto [idx, a] : sst::cpputils::enumerate(arr))
     {
         REQUIRE(a.val() == 3 * idx);
@@ -763,7 +762,7 @@ TEST_CASE("ActiveSet")
 
     auto len = [](const auto &as) {
         int idx = 0;
-        for (const auto &x : as)
+        for (const auto _ : as)
             idx++;
         return idx;
     };

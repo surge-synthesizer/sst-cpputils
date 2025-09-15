@@ -8,13 +8,14 @@ add_library(${PROJECT_NAME} INTERFACE)
 target_include_directories(${PROJECT_NAME} INTERFACE include)
 
 if (MSVC)
+    message(FATAL_ERROR "${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}")
     target_compile_options(${PROJECT_NAME} INTERFACE
             /utf-8 /bigobj /permissive-
             /Zc:__cplusplus,enumTypes,templateScope,throwingNew,preprocessor)
 endif ()
 
 get_directory_property(parent_dir PARENT_DIRECTORY)
-if ("${parent_dir}" STREQUAL "")
+if (" ${parent_dir}" STREQUAL "")
     set(is_toplevel 1)
 else ()
     set(is_toplevel 0)

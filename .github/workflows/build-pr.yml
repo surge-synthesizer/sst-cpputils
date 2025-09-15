@@ -21,7 +21,7 @@ jobs:
             testExe: build/sst-cpputils-tests
 
           - os: windows-latest
-            name: win
+            name: win msvc
             testExe: build/Release/sst-cpputils-tests.exe
             cmake-args: -A x64
 
