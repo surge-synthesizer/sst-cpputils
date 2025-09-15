@@ -39,7 +39,7 @@ jobs:
 
       - name: Build Smoke test
         run: |
-          cmake -S . -B ./build ${{ matrix.cmake-args }} -DCMAKE_BUILD_TYPE=Release -DSST_CPPUTILS_TESTS=TRUE -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+          cmake -S . -B ./build ${{ matrix.cmake-args }} -DCMAKE_BUILD_TYPE=Release -DSST_CPPUTILS_BUILD_TESTS=TRUE -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
           cmake --build ./build --config Release
 
       - name: Run Smoke Test
