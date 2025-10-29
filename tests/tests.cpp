@@ -1051,6 +1051,7 @@ TEST_CASE("DynArray")
 #endif
         REQUIRE(std::equal(a.begin(), a.end(), d.begin(), d.end(), deepeq));
     }
+
     SECTION("ConstructionArgs")
     {
         struct X
@@ -1063,6 +1064,14 @@ TEST_CASE("DynArray")
         };
         sst::cpputils::DynArray<X> a(3, 5);
         REQUIRE(a[1].a_ == 5);
+    }
+
+    SECTION("Custom Allocator")
+    {
+        sst::cpputils::DynArray<int, sst::cpputils::AlignedAllocator<int, 128>> a(3);
+        a[0] = 2;
+        REQUIRE(alignof(int) < 128);
+        REQUIRE(reinterpret_cast<std::uint64_t>(std::to_address(a.data())) % 128 == 0);
     }
 }
 
