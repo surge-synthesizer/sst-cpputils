@@ -23,6 +23,7 @@
 #include <map>
 #include <unordered_map>
 #include <unordered_set>
+#include <span>
 #include <string>
 
 TEST_CASE("Enumerate")
@@ -950,6 +951,118 @@ TEST_CASE("ActiveSet")
             }
         }
         REQUIRE(len(as) == sz - rm);
+    }
+}
+
+TEST_CASE("DynArray")
+{
+    SECTION("Basic integers")
+    {
+        sst::cpputils::DynArray<int> a{0, 1, 2};
+        REQUIRE(a.front() == 0);
+        REQUIRE(a.at(1) == 1);
+        REQUIRE(a.back() == 2);
+        bool e = false;
+        try
+        {
+            a[3] = 3;
+        }
+        catch (...)
+        {
+            e = true;
+        }
+        REQUIRE(e == true);
+        REQUIRE(a.size() == 3);
+
+        // Copy it to another fixed array.
+        sst::cpputils::DynArray<int> b = a;
+        REQUIRE(a == b);
+        b[1] = 5;
+        REQUIRE(a != b);
+
+        // Copy with constructor.
+        sst::cpputils::DynArray<int> c(a);
+        REQUIRE(a == c);
+        REQUIRE(b != c);
+        c[1] = 5;
+        REQUIRE(a != c);
+        REQUIRE(b == c);
+
+        // Copy with assignment.
+        a = b;
+        REQUIRE(a == b);
+        a[1] = 1;
+        REQUIRE(a != b);
+
+        // Equals with initializer list.
+        c = {4, 5, 6};
+        REQUIRE(a != c);
+        c = {0, 1, 2};
+        REQUIRE(a == c);
+
+        b = {1, 1, 1};
+        a.fill(1);
+        REQUIRE(a == b);
+
+        std::vector<int> v = {5, 6, 7, 8};
+        std::copy(v.begin(), v.begin() + 3, a.begin());
+        REQUIRE(std::equal(a.begin(), a.end(), v.begin()));
+        REQUIRE(!(std::equal(v.begin(), v.end(), a.begin(), a.end())));
+
+        std::copy(a.begin(), a.end(), v.begin());
+    }
+
+    SECTION("Move-only types")
+    {
+        sst::cpputils::DynArray<std::unique_ptr<int>> a(3);
+        sst::cpputils::DynArray<std::unique_ptr<int>> b(3);
+        b[0].reset(new int(0));
+        b[1].reset(new int(1));
+        b[2].reset(new int(3));
+
+        // This fails to compile:
+        // a = b
+
+        auto deepeq = [](const std::unique_ptr<int> &lhs, const std::unique_ptr<int> &rhs) {
+            return *lhs == *rhs;
+        };
+
+        a = std::move(b);
+        REQUIRE(!std::equal(a.begin(), a.end(), b.begin(), b.end(), deepeq));
+        b.reset(3);
+        b[0].reset(new int(0));
+        b[1].reset(new int(1));
+        b[2].reset(new int(3));
+        REQUIRE(std::equal(a.begin(), a.end(), b.begin(), b.end(), deepeq));
+
+        sst::cpputils::DynArray<std::unique_ptr<int>> c(std::move(b));
+        REQUIRE(!std::equal(c.begin(), c.end(), b.begin(), b.end(), deepeq));
+        REQUIRE(std::equal(a.begin(), a.end(), c.begin(), c.end(), deepeq));
+
+        std::span<std::unique_ptr<int>> s = c;
+        REQUIRE(s.size() == 3);
+        REQUIRE(s.data() == c.data());
+
+#if 1
+        sst::cpputils::DynArray<std::unique_ptr<int>> d(std::make_move_iterator(c.begin()),
+                                                        std::make_move_iterator(c.end()));
+#else // this one will not compile.
+        sst::cpputils::DynArray<std::unique_ptr<int>> d(c.begin(), c.end());
+#endif
+        REQUIRE(std::equal(a.begin(), a.end(), d.begin(), d.end(), deepeq));
+    }
+    SECTION("ConstructionArgs")
+    {
+        struct X
+        {
+            X() = delete;
+            X(const X &) = delete;
+            X(X &&) = default;
+            explicit X(int a) : a_(a) {}
+            int a_;
+        };
+        sst::cpputils::DynArray<X> a(3, 5);
+        REQUIRE(a[1].a_ == 5);
     }
 }
 

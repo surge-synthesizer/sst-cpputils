@@ -20,6 +20,7 @@
 #include "sst/cpputils/ring_buffer.h"
 #include "sst/cpputils/bindings.h"
 #include "sst/cpputils/constructors.h"
+#include "sst/cpputils/dyn_array.h"
 #include "sst/cpputils/fixed_allocater.h"
 #include "sst/cpputils/active_set_overlay.h"
 
