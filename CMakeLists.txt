@@ -22,6 +22,21 @@ endif ()
 option(SST_CPPUTILS_BUILD_TESTS "Add targets for building and running sst-cpputils tests" ${PROJECT_IS_TOP_LEVEL})
 
 if (SST_CPPUTILS_BUILD_TESTS)
+
+    # Allow sanitizer builds
+    if (${PROJECT_IS_TOP_LEVEL})
+        if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+            add_compile_options(
+                    $<$<BOOL:${USE_SANITIZER}>:-fsanitize=address>
+                    $<$<BOOL:${USE_SANITIZER}>:-fsanitize=undefined>
+            )
+
+            add_link_options(
+                    $<$<BOOL:${USE_SANITIZER}>:-fsanitize=address>
+                    $<$<BOOL:${USE_SANITIZER}>:-fsanitize=undefined>
+            )
+        endif ()
+    endif ()
     add_executable(sst-cpputils-tests)
     target_include_directories(sst-cpputils-tests PRIVATE tests)
     target_link_libraries(sst-cpputils-tests PRIVATE ${PROJECT_NAME})

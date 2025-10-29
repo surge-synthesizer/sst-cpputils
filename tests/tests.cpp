@@ -839,7 +839,7 @@ TEST_CASE("ActiveSet")
         sst::cpputils::active_set_overlay<TestThing> as;
         for (int i = 0; i < 40; ++i)
         {
-            as.addToActive(things[rand() & things.size()]);
+            as.addToActive(things[rand() % things.size()]);
         }
         REQUIRE(len(as) <= 40);
 
