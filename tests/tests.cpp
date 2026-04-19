@@ -679,9 +679,8 @@ TEST_CASE("Array Lambda CTor")
         int val() const { return a + b; }
     };
 
-    std::array<NeedsArgs, 20> arr{sst::cpputils::make_array_lambda<NeedsArgs, 20>([](auto idx) {
-        return NeedsArgs{(int)idx, (int)idx * 2};
-    })};
+    std::array<NeedsArgs, 20> arr{sst::cpputils::make_array_lambda<NeedsArgs, 20>(
+        [](auto idx) { return NeedsArgs{(int)idx, (int)idx * 2}; })};
     for (const auto [idx, a] : sst::cpputils::enumerate(arr))
     {
         REQUIRE(a.val() == 3 * idx);
