@@ -24,5 +24,6 @@
 #include "sst/cpputils/aligned_allocator.h"
 #include "sst/cpputils/fixed_allocater.h"
 #include "sst/cpputils/active_set_overlay.h"
+#include "sst/cpputils/scope_guard.h"
 
 static_assert(__cplusplus >= 202002L, "Surge team libraries have moved to C++ 20");

@@ -42,7 +42,7 @@ if (SST_CPPUTILS_BUILD_TESTS)
     target_link_libraries(sst-cpputils-tests PRIVATE ${PROJECT_NAME})
     target_include_directories(sst-cpputils-tests PRIVATE libs/catch2)
     target_sources(sst-cpputils-tests PRIVATE
-            tests/tests.cpp)
+            tests/tests.cpp tests/scope_guard_tests.cpp)
 
     add_custom_command(TARGET sst-cpputils-tests
             POST_BUILD
