@@ -20,12 +20,12 @@ jobs:
             name: mac
             testExe: build/sst-cpputils-tests
 
-          - os: windows-latest
+          - os: windows-2022
             name: win msvc
             testExe: build/Release/sst-cpputils-tests.exe
             cmake-args: -A x64
 
-          - os: windows-latest
+          - os: windows-2022
             name: win clangcl
             testExe: build/Release/sst-cpputils-tests.exe
             cmake-args: -A x64 -T ClangCL  -G"Visual Studio 17 2022"

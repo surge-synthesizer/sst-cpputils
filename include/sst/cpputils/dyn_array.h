@@ -4,7 +4,7 @@
  *
  * Provides a collection of tools useful for writing C++-17 code
  *
- * Copyright 2022-2025, various authors, as described in the GitHub
+ * Copyright 2022-2026, various authors, as described in the GitHub
  * transaction log.
  *
  * sst-cpputils is released under the MIT License found in the "LICENSE"
