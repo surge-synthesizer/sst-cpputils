@@ -34,8 +34,8 @@
  * Originally released to the public domain.
  */
 
-#ifndef SCOPE_GUARD_HPP_
-#define SCOPE_GUARD_HPP_
+#ifndef INCLUDE_SST_CPPUTILS_SCOPE_GUARD_H
+#define INCLUDE_SST_CPPUTILS_SCOPE_GUARD_H
 
 #include <type_traits>
 #include <utility>
