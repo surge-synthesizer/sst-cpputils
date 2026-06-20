@@ -19,6 +19,7 @@
 #include "catch2.hpp"
 
 #include <set>
+#include <type_traits>
 #include <utility>
 
 using sst::cpputils::SmallHashMap;
@@ -224,4 +225,49 @@ TEST_CASE("SmallHashSet basic operations, dedup, and spill")
     s.clear();
     REQUIRE(s.empty());
     REQUIRE_FALSE(s.contains(5));
+}
+
+TEST_CASE("SmallHashMap const find and at (inline)")
+{
+    SmallHashMap<int, int, 8> m;
+    for (int i = 0; i < 5; ++i)
+        m[i] = i * 10;
+
+    // Resolve find/at through a const reference: this picks the const-qualified overloads (the
+    // non-const ones are not callable on a const object, so reaching them here proves they exist).
+    const auto &cm = m;
+
+    // at() const returns a reference to const
+    static_assert(std::is_same_v<decltype(cm.at(0)), const int &>);
+    REQUIRE(cm.at(0) == 0);
+    REQUIRE(cm.at(4) == 40);
+
+    // find() const yields a const_iterator with const access to the stored pair
+    static_assert(std::is_same_v<decltype(cm.find(0)), SmallHashMap<int, int, 8>::const_iterator>);
+    auto it = cm.find(3);
+    REQUIRE(it != cm.end());
+    REQUIRE(it->first == 3);
+    REQUIRE(it->second == 30);
+    REQUIRE((*it).second == 30);
+
+    // a miss compares equal to the const end()
+    REQUIRE(cm.find(99999) == cm.end());
+}
+
+TEST_CASE("SmallHashMap const find and at after spill")
+{
+    SmallHashMap<int, int, 2> m; // tiny inline buffer -> will spill to the heap
+    for (int i = 0; i < 50; ++i)
+        m[i] = i + 1;
+    REQUIRE(m.capacity() > 4); // confirm it spilled
+
+    // The const overloads must work the same once the buffer lives on the heap.
+    const auto &cm = m;
+    for (int i = 0; i < 50; ++i)
+    {
+        REQUIRE(cm.find(i) != cm.end());
+        REQUIRE(cm.find(i)->second == i + 1);
+        REQUIRE(cm.at(i) == i + 1);
+    }
+    REQUIRE(cm.find(50) == cm.end());
 }

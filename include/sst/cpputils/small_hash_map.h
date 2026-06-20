@@ -257,6 +257,15 @@ template <typename K, typename V, size_t InlineCap, typename Hash = std::hash<K>
         return end();
     }
 
+    const_iterator find(const K &k) const
+    {
+        size_t mask = cap_ - 1;
+        for (size_t i = Hash{}(k)&mask; slots_[i].used; i = (i + 1) & mask)
+            if (slots_[i].kv.first == k)
+                return {slots_ + i, slots_ + cap_};
+        return end();
+    }
+
     V &operator[](const K &k)
     {
         if (4 * (size_ + 1) > 3 * cap_)
@@ -276,6 +285,13 @@ template <typename K, typename V, size_t InlineCap, typename Hash = std::hash<K>
     }
 
     V &at(const K &k)
+    {
+        auto it = find(k);
+        assert(it != end());
+        return it->second;
+    }
+
+    const V &at(const K &k) const
     {
         auto it = find(k);
         assert(it != end());
